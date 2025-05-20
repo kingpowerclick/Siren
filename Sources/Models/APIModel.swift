@@ -9,9 +9,11 @@
 import Foundation
 
 /// Model representing a selection of results from the iTunes Lookup API.
-struct APIModel: Decodable {
+struct APIModel: Decodable
+{
     /// Codable Coding Keys for the Top-Level iTunes Lookup API JSON response.
-    private enum CodingKeys: String, CodingKey {
+    private enum CodingKeys: String, CodingKey
+    {
         /// The results JSON key.
         case results
     }
@@ -20,9 +22,11 @@ struct APIModel: Decodable {
     let results: [Results]
 
     /// The Results object from the the iTunes Lookup API.
-    struct Results: Decodable {
+    struct Results: Decodable
+    {
         ///  Codable Coding Keys for the Results array in the iTunes Lookup API JSON response.
-        private enum CodingKeys: String, CodingKey {
+        private enum CodingKeys: String, CodingKey
+        {
             /// The appID JSON key.
             case appID = "trackId"
             /// The current version release date JSON key.

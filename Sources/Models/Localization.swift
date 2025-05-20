@@ -9,12 +9,14 @@
 import Foundation
 
 /// Localization information and strings for Siren.
-public struct Localization {
+public struct Localization
+{
     /// Determines the available languages in which the update message and alert button titles should appear.
     ///
     /// By default, the operating system's default lanuage setting is used. However, you can force a specific language
     /// by setting the forceLanguageLocalization property before calling checkVersion()
-    public enum Language: String {
+    public enum Language: String
+    {
         /// Arabic Language Localization
         case arabic = "ar"
         /// Armenian Language Localization
@@ -116,8 +118,10 @@ public struct Localization {
     /// - Parameters:
     ///   - appName: Overrides the default name of the app. This is optional and defaults to the app that is defined in the `Info.plist`.
     ///   - forceLanguage: The language the alert to which the alert should be set. If `nil`, it falls back to the device's preferred locale.
-    init(appName: String?, andForceLanguageLocalization forceLanguage: Language?) {
-        if let appName = appName {
+    init(appName: String?, andForceLanguageLocalization forceLanguage: Language?)
+    {
+        if let appName = appName
+        {
             self.appName = appName
         }
 
@@ -127,9 +131,11 @@ public struct Localization {
     /// The localized string for the `UIAlertController`'s message field.  .
     ///
     /// - Returns: A localized string for the update message.
-    public func alertMessage(forCurrentAppStoreVersion currentAppStoreVersion: String) -> String {
-        let message = Bundle.localizedString(forKey: AlertConstants.alertMessage,
-                                             andForceLocalization: forceLanguage)
+    public func alertMessage(forCurrentAppStoreVersion currentAppStoreVersion: String) -> String
+    {
+        let message = Bundle.localizedString(
+            forKey: AlertConstants.alertMessage,
+            andForceLocalization: forceLanguage)
 
         return String(format: message, appName, currentAppStoreVersion)
     }
@@ -137,32 +143,40 @@ public struct Localization {
     /// The localized string for the `UIAlertController`'s title field.  .
     ///
     /// - Returns: A localized string for the phrase "Update Available".
-    public func alertTitle() -> String {
-        return Bundle.localizedString(forKey: AlertConstants.alertTitle,
-                                      andForceLocalization: forceLanguage)
+    public func alertTitle() -> String
+    {
+        return Bundle.localizedString(
+            forKey: AlertConstants.alertTitle,
+            andForceLocalization: forceLanguage)
     }
 
     /// The localized string for the "Next time" `UIAlertAction`.
     ///
     /// - Returns: A localized string for the phrase "Next time".
-    public func nextTimeButtonTitle() -> String {
-        return Bundle.localizedString(forKey: AlertConstants.nextTimeButtonTitle,
-                                      andForceLocalization: forceLanguage)
+    public func nextTimeButtonTitle() -> String
+    {
+        return Bundle.localizedString(
+            forKey: AlertConstants.nextTimeButtonTitle,
+            andForceLocalization: forceLanguage)
     }
 
     /// The localized string for the "Skip this version" `UIAlertAction`.
     ///
     /// - Returns: A localized string for the phrase "Skip this version".
-    public func skipButtonTitle() -> String {
-        return Bundle.localizedString(forKey: AlertConstants.skipButtonTitle,
-                                      andForceLocalization: forceLanguage)
+    public func skipButtonTitle() -> String
+    {
+        return Bundle.localizedString(
+            forKey: AlertConstants.skipButtonTitle,
+            andForceLocalization: forceLanguage)
     }
 
     /// The localized string for the "Update" `UIAlertAction`.
     ///
     /// - Returns: A localized string for the phrase "Update".
-    public func updateButtonTitle() -> String {
-        return Bundle.localizedString(forKey: AlertConstants.updateButtonTitle,
-                                      andForceLocalization: forceLanguage)
+    public func updateButtonTitle() -> String
+    {
+        return Bundle.localizedString(
+            forKey: AlertConstants.updateButtonTitle,
+            andForceLocalization: forceLanguage)
     }
 }

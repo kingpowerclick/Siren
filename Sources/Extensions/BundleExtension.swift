@@ -9,9 +9,11 @@
 import Foundation
 
 // `Bundle` Extension for Siren.
-extension Bundle {
+extension Bundle
+{
     /// Constants used in the `Bundle` extension.
-    struct Constants {
+    struct Constants
+    {
         /// Constant for the `.bundle` file extension.
         static let bundleExtension = "bundle"
         /// Constant for `CFBundleDisplayName`.
@@ -29,7 +31,8 @@ extension Bundle {
     /// Fetches the current version of the app.
     ///
     /// - Returns: The current installed version of the app.
-    final class func version() -> String? {
+    final class func version() -> String?
+    {
         return Bundle.main.object(forInfoDictionaryKey: Constants.shortVersionString) as? String
     }
 
@@ -44,18 +47,24 @@ extension Bundle {
     ///   - key: The default string used to search the localization table for a specific translation.
     ///   - forcedLanguage: Returns
     /// - Returns: The localized string for a given key.
-    final class func localizedString(forKey key: String, andForceLocalization forcedLanguage: Localization.Language?) -> String {
-        guard var path = sirenBundlePath() else {
+    final class func localizedString(
+        forKey key: String,
+        andForceLocalization forcedLanguage: Localization.Language?) -> String
+    {
+        guard var path = sirenBundlePath() else
+        {
             return key
         }
 
         if let deviceLangauge = deviceLanguage(),
-            let devicePath = sirenForcedBundlePath(forceLanguageLocalization: deviceLangauge) {
+            let devicePath = sirenForcedBundlePath(forceLanguageLocalization: deviceLangauge)
+        {
             path = devicePath
         }
 
         if let forcedLanguage = forcedLanguage,
-            let forcedPath = sirenForcedBundlePath(forceLanguageLocalization: forcedLanguage) {
+            let forcedPath = sirenForcedBundlePath(forceLanguageLocalization: forcedLanguage)
+        {
             path = forcedPath
         }
 
@@ -69,7 +78,8 @@ extension Bundle {
     /// if the aforementioned values are nil.
     ///
     /// - Returns: The name of the app.
-    final class func bestMatchingAppName() -> String {
+    final class func bestMatchingAppName() -> String
+    {
         let bundleDisplayName = Bundle.main.object(forInfoDictionaryKey: Constants.displayName) as? String
         let bundleName = Bundle.main.object(forInfoDictionaryKey: kCFBundleNameKey as String) as? String
 
@@ -77,11 +87,13 @@ extension Bundle {
     }
 }
 
-private extension Bundle {
+private extension Bundle
+{
     /// The path to Siren's localization `Bundle`.
     ///
     /// - Returns: The bundle's path or `nil`.
-    final class func sirenBundlePath() -> String? {
+    final class func sirenBundlePath() -> String?
+    {
         #if SWIFT_PACKAGE
         return Bundle.module.path(forResource: "\(Siren.self)", ofType: Constants.bundleExtension)
         #else
@@ -93,7 +105,8 @@ private extension Bundle {
     ///
     /// - Parameter forceLanguageLocalization: The language localization that should be searched for in Siren's localization `bundle`.
     /// - Returns: The path to the forced language localization.
-    final class func sirenForcedBundlePath(forceLanguageLocalization: Localization.Language) -> String? {
+    final class func sirenForcedBundlePath(forceLanguageLocalization: Localization.Language) -> String?
+    {
         guard let path = sirenBundlePath() else { return nil }
         let name = forceLanguageLocalization.rawValue
 
@@ -103,10 +116,12 @@ private extension Bundle {
     /// The user's preferred language based on their device's localization.
     ///
     /// - Returns: The user's preferred language.
-    final class func deviceLanguage() -> Localization.Language? {
+    final class func deviceLanguage() -> Localization.Language?
+    {
         guard let preferredLocalization = Bundle.main.preferredLocalizations.first,
             preferredLocalization != Constants.englishLocalization,
-            let preferredLanguage = Localization.Language(rawValue: preferredLocalization) else {
+            let preferredLanguage = Localization.Language(rawValue: preferredLocalization) else
+        {
                 return nil
         }
 

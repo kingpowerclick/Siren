@@ -10,7 +10,8 @@ import Foundation
 
 /// The validated and unwrapped `APIModel`.
 /// This model is presented to the end user in Siren's completion handler.
-public struct Model {
+public struct Model
+{
     /// The app's App ID.
     public let appID: Int
 
@@ -34,11 +35,13 @@ public struct Model {
     ///   - minimumOSVersion: The minimum version of iOS that the current version of the app requires.
     ///   - releaseNotes: The releases notes from the latest version of the app.
     ///   - version: The latest version of the app.
-    init(appID: Int,
-         currentVersionReleaseDate: String,
-         minimumOSVersion: String,
-         releaseNotes: String?,
-         version: String) {
+    init(
+        appID: Int,
+        currentVersionReleaseDate: String,
+        minimumOSVersion: String,
+        releaseNotes: String?,
+        version: String)
+    {
         self.appID = appID
         self.currentVersionReleaseDate = currentVersionReleaseDate
         self.minimumOSVersion = minimumOSVersion
