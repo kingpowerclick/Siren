@@ -26,8 +26,8 @@ public final class Siren
     /// The current installed version of your app.
     lazy var currentInstalledVersion: String? = Bundle.version()
     
-    /// The last date that an alert was presented to the user.
-    private var alertPresentationDate: Date? = UserDefaults.alertPresentationDate
+    /// Storing a version that the user wants to skip updating.
+    private var storedSkippedVersion: String? = UserDefaults.storedSkippedVersion
     
     /// The App Store's unique identifier for an app.
     private var appID: Int?
@@ -35,8 +35,7 @@ public final class Siren
     /// The completion handler used to return the results or errors returned by Siren.
     private var resultsHandler: ResultsHandler?
     
-    private var softUpdateFrequency: Rules.UpdatePromptFrequency = .daily
-    
+    /// Defines how Siren determines if an update prompt should be shown, defaulting to `.newAppStoreUpdateOnly`.
     private var versionCheckingStrategy: VersionCheckingStrategy = .newAppStoreUpdateOnly
 }
 
@@ -47,18 +46,15 @@ public extension Siren
     /// This method executes the Siren version checking and alert presentation flow.
     ///
     /// - Parameters:
-    ///   - updateConfiguration: qwerty.
-    ///   - softUpdateVersion: qwerty.
+    ///   - versionCheckingStrategy:  A value that determines the update rules (e.g., mandatory, optional, both, or new version only). Defaults to `.newAppStoreUpdateOnly`.
     ///   - handler: Returns the metadata around a successful version check and interaction with the update modal or it returns nil.
     func checkVersionUpdate(
         _ versionCheckingStrategy: VersionCheckingStrategy = .newAppStoreUpdateOnly,
-        softUpdateFrequency: Rules.UpdatePromptFrequency = .daily,
         completion handler: ResultsHandler? = nil)
     {
         resultsHandler = handler
         
         self.versionCheckingStrategy = versionCheckingStrategy
-        self.softUpdateFrequency = softUpdateFrequency
         
         startVersionCheckFlow()
     }
@@ -80,6 +76,14 @@ public extension Siren
         await MainActor.run {
             UIApplication.shared.open(url, options: [:], completionHandler: nil) }
     }
+    
+    /// Begins the version checking and update evaluation process.
+    ///
+    /// This method retrieves the previously skipped version (if any) from `UserDefaults`,
+    func markAsSkippedVersion(softVersionToSkip: String)
+    {
+        UserDefaults.storedSkippedVersion = softVersionToSkip
+    }
 }
 
 // MARK: - Version Check and Alert Presentation Flow
@@ -89,7 +93,7 @@ private extension Siren
     /// Initiates the version checking flow.
     func startVersionCheckFlow()
     {
-        alertPresentationDate = UserDefaults.alertPresentationDate
+        storedSkippedVersion = UserDefaults.storedSkippedVersion
         
         Task
         {
@@ -168,8 +172,6 @@ private extension Siren
             case let .mandatoryUpdateOnly(minimumRequiredVersion):
                 if DataParser.isVersionOlder(currentAppStoreVersion, than: minimumRequiredVersion)
                 {
-                    UserDefaults.alertPresentationDate = Date()
-                    
                     resultsHandler?(
                         .success(
                             UpdateResults(
@@ -178,8 +180,6 @@ private extension Siren
                 }
                 else if DataParser.isVersionOlder(currentInstalledVersion, than: minimumRequiredVersion)
                 {
-                    UserDefaults.alertPresentationDate = Date()
-                    
                     resultsHandler?(
                         .success(
                             UpdateResults(
@@ -195,10 +195,8 @@ private extension Siren
                 if DataParser.isVersionOlder(currentInstalledVersion, than: recommededVersion)
                     && DataParser.isVersionOlder(currentInstalledVersion, than: currentAppStoreVersion)
                 {
-                    guard let alertPresentationDate = alertPresentationDate else
+                    guard let storedSkippedVersion = storedSkippedVersion else
                     {
-                        UserDefaults.alertPresentationDate = Date()
-                        
                         resultsHandler?(
                             .success(
                                 UpdateResults(
@@ -208,7 +206,7 @@ private extension Siren
                         return
                     }
                     
-                    if Date.days(since: alertPresentationDate) >= softUpdateFrequency.days
+                    if storedSkippedVersion != recommededVersion
                     {
                         UserDefaults.alertPresentationDate = Date()
                         
@@ -231,8 +229,6 @@ private extension Siren
             case let .bothMandatoryAndOptional(minimumRequiredVersion, recommededVersion):
                 if DataParser.isVersionOlder(currentAppStoreVersion, than: minimumRequiredVersion)
                 {
-                    UserDefaults.alertPresentationDate = Date()
-                    
                     resultsHandler?(
                         .success(
                             UpdateResults(
@@ -241,8 +237,6 @@ private extension Siren
                 }
                 else if DataParser.isVersionOlder(currentInstalledVersion, than: minimumRequiredVersion)
                 {
-                    UserDefaults.alertPresentationDate = Date()
-                    
                     resultsHandler?(
                         .success(
                             UpdateResults(
@@ -252,10 +246,8 @@ private extension Siren
                 else if DataParser.isVersionOlder(currentInstalledVersion, than: recommededVersion)
                             && DataParser.isVersionOlder(currentInstalledVersion, than: currentAppStoreVersion)
                 {
-                    guard let alertPresentationDate = alertPresentationDate else
+                    guard let storedSkippedVersion = storedSkippedVersion else
                     {
-                        UserDefaults.alertPresentationDate = Date()
-                        
                         resultsHandler?(
                             .success(
                                 UpdateResults(
@@ -265,10 +257,8 @@ private extension Siren
                         return
                     }
                     
-                    if Date.days(since: alertPresentationDate) >= softUpdateFrequency.days
+                    if storedSkippedVersion != recommededVersion
                     {
-                        UserDefaults.alertPresentationDate = Date()
-                        
                         resultsHandler?(
                             .success(
                                 UpdateResults(
