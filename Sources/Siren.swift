@@ -59,24 +59,25 @@ public extension Siren
         {
             let result = await fetchAppStoreVersionData()
             
-            if isByPassAppStoreVersionCheck
-            {
-                validate(versionCheckingType: versionCheckingType)
-            }
-            else
-            {
-                switch result
+            await MainActor.run {
+                if isByPassAppStoreVersionCheck
                 {
-                    case let .success(appStoreDataModel):
-                        validate(
-                            versionCheckingType: versionCheckingType,
-                            appStoreDataModel: appStoreDataModel)
-                        
-                    case let .failure(error):
-                        resultsHandler?(.failure(error))
-                        
+                    validate(versionCheckingType: versionCheckingType)
                 }
-            }
+                else
+                {
+                    switch result
+                    {
+                        case let .success(appStoreDataModel):
+                            validate(
+                                versionCheckingType: versionCheckingType,
+                                appStoreDataModel: appStoreDataModel)
+                            
+                        case let .failure(error):
+                            resultsHandler?(.failure(error))
+                            
+                    }
+                } }
         }
     }
     
@@ -89,7 +90,8 @@ public extension Siren
         guard let appID = appID,
               let url = URL(string: "https://itunes.apple.com/app/id\(appID)") else
         {
-            resultsHandler?(.failure(.malformedURL))
+            await MainActor.run {
+                resultsHandler?(.failure(.malformedURL)) }
             
             return
         }
