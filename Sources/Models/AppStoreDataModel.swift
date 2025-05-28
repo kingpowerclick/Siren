@@ -1,5 +1,5 @@
 //
-//  Model.swift
+//  AppStoreDataModel.swift
 //  Siren
 //
 //  Created by Arthur Sabintsev on 3/27/19.
@@ -10,7 +10,7 @@ import Foundation
 
 /// The validated and unwrapped `APIModel`.
 /// This model is presented to the end user in Siren's completion handler.
-public struct Model
+public struct AppStoreDataModel
 {
     /// The app's App ID.
     public let appID: Int

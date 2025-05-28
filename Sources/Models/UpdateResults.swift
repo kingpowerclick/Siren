@@ -15,6 +15,6 @@ public struct UpdateResults
     public var alertType: Rules.AlertType = .none
 
     /// The Swift-mapped and unwrapped API model, if a successful version check was performed.
-    public let model: Model
+    public let model: AppStoreDataModel?
     
 }
