@@ -55,15 +55,17 @@ public extension Siren
         
         storedSkippedVersion = UserDefaults.storedSkippedVersion
         
-        if isByPassAppStoreVersionCheck
+        Task
         {
-            validate(versionCheckingType: versionCheckingType)
-        }
-        else
-        {
-            Task
+            let result = await fetchAppStoreVersionData()
+            
+            if isByPassAppStoreVersionCheck
             {
-                switch await performVersionCheck()
+                validate(versionCheckingType: versionCheckingType)
+            }
+            else
+            {
+                switch result
                 {
                     case let .success(appStoreDataModel):
                         validate(
@@ -74,10 +76,6 @@ public extension Siren
                         resultsHandler?(.failure(error))
                         
                 }
-                
-                
-                await MainActor.run {
-                    validate(versionCheckingType: versionCheckingType) }
             }
         }
     }
@@ -114,7 +112,7 @@ public extension Siren
 private extension Siren
 {
     /// Initiatives the version check request.
-    func performVersionCheck() async -> Result<AppStoreDataModel, KnownError>
+    func fetchAppStoreVersionData() async -> Result<AppStoreDataModel, KnownError>
     {
         do
         {
@@ -132,6 +130,7 @@ private extension Siren
             {
                 return .failure(.appStoreAppIDFailure)
             }
+            self.appID = appID
             
             // Check the release date of the current version.
             guard let currentVersionReleaseDate = apiModel.results.first?.currentVersionReleaseDate else
