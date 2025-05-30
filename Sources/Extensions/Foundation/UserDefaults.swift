@@ -1,5 +1,5 @@
 //
-//  UserDefaultsExtension.swift
+//  UserDefaults.swift
 //  Siren
 //
 //  Created by Arthur Sabintsev on 9/25/18.

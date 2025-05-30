@@ -1,5 +1,5 @@
 //
-//  BundleExtension.swift
+//  Bundle.swift
 //  Siren
 //
 //  Created by Arthur Sabintsev on 3/17/17.
