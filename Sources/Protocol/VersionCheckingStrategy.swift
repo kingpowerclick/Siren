@@ -9,7 +9,7 @@ public protocol VersionCheckingStrategy
 {
     func evaluateUpdate(
         currentInstalledVersion: String,
-        currentAppStoreVersion: String,
+        currentAppStoreVersion: String?,
         minimumRequiredVersion: String,
         recommendedVersion: String,
         storedSkippedVersion: String?,
@@ -22,7 +22,7 @@ struct DefaultVersionCheckingStrategy: VersionCheckingStrategy
 {
     func evaluateUpdate(
         currentInstalledVersion: String,
-        currentAppStoreVersion: String,
+        currentAppStoreVersion: String?,
         minimumRequiredVersion: String,
         recommendedVersion: String,
         storedSkippedVersion: String?,
@@ -68,13 +68,18 @@ struct AppStoreVersionCheckingStrategy: VersionCheckingStrategy
 {
     func evaluateUpdate(
         currentInstalledVersion: String,
-        currentAppStoreVersion: String,
+        currentAppStoreVersion: String?,
         minimumRequiredVersion: String,
         recommendedVersion: String,
         storedSkippedVersion: String?,
         appStoreDataModel: AppStoreDataModel?,
         completion handler: ((Result<UpdateResults, KnownError>) -> Void)? = nil)
     {
+        guard let currentAppStoreVersion = currentAppStoreVersion else
+        {
+            return
+        }
+        
         if currentInstalledVersion.isVersionOlder(than: minimumRequiredVersion)
         {
             if currentAppStoreVersion.isVersionOlder(than: minimumRequiredVersion)

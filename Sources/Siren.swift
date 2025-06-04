@@ -69,37 +69,46 @@ public extension Siren
             let result = await fetchAppStoreVersionData()
             
             await MainActor.run {
+                var appStoreDataModel: AppStoreDataModel?
                 switch result
                 {
-                    case let .success(appStoreDataModel):
-                        if let overridedStrategy = overridedStrategy
-                        {
-                            overridedStrategy
-                                .evaluateUpdate(
-                                    currentInstalledVersion: currentInstalledVersion,
-                                    currentAppStoreVersion: appStoreDataModel.version,
-                                    minimumRequiredVersion: minimumRequiredVersion,
-                                    recommendedVersion: recommendedVersion,
-                                    storedSkippedVersion: storedSkippedVersion,
-                                    appStoreDataModel: appStoreDataModel,
-                                    completion: handler)
-                        }
-                        else
-                        {
-                            DefaultVersionCheckingStrategy()
-                                .evaluateUpdate(
-                                    currentInstalledVersion: currentInstalledVersion,
-                                    currentAppStoreVersion: appStoreDataModel.version,
-                                    minimumRequiredVersion: minimumRequiredVersion,
-                                    recommendedVersion: recommendedVersion,
-                                    storedSkippedVersion: storedSkippedVersion,
-                                    appStoreDataModel: appStoreDataModel,
-                                    completion: handler)
-                        }
+                    case let .success(dataModel):
+                        appStoreDataModel = dataModel
                         
                     case let .failure(error):
-                        resultsHandler?(.failure(error))
-                } }
+                        guard case .appStoreDataRetrievalEmptyResults = error else
+                        {
+                            resultsHandler?(.failure(error))
+                            return
+                        }
+                }
+                
+                if let overridedStrategy = overridedStrategy
+                {
+                    overridedStrategy
+                        .evaluateUpdate(
+                            currentInstalledVersion: currentInstalledVersion,
+                            currentAppStoreVersion: appStoreDataModel?.version,
+                            minimumRequiredVersion: minimumRequiredVersion,
+                            recommendedVersion: recommendedVersion,
+                            storedSkippedVersion: storedSkippedVersion,
+                            appStoreDataModel: appStoreDataModel,
+                            completion: handler)
+                }
+                else
+                {
+                    DefaultVersionCheckingStrategy()
+                        .evaluateUpdate(
+                            currentInstalledVersion: currentInstalledVersion,
+                            currentAppStoreVersion: appStoreDataModel?.version,
+                            minimumRequiredVersion: minimumRequiredVersion,
+                            recommendedVersion: recommendedVersion,
+                            storedSkippedVersion: storedSkippedVersion,
+                            appStoreDataModel: appStoreDataModel,
+                            completion: handler)
+                }
+                
+            }
         }
     }
     
