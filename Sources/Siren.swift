@@ -149,24 +149,36 @@ private extension Siren
     {
         do
         {
-            let apiModel = try await apiManager.performVersionCheckRequest()
+            let result = try await apiManager.performVersionCheckRequest()
+            
+            let apiDataModel: APIModel?
+            
+            switch result
+            {
+                case let .success(apiModel):
+                    apiDataModel = apiModel
+                case let .failure(error):
+                    apiDataModel = nil
+                    return .failure(error)
+            }
+            
             
             // Check if the latest version is compatible with current device's version of iOS.
-            guard DataParser.isUpdateCompatibleWithDeviceOS(for: apiModel) else
+            guard DataParser.isUpdateCompatibleWithDeviceOS(for: apiDataModel) else
             {
                 return .failure(.appStoreOSVersionUnsupported)
             }
             
             // Check and store the App ID .
-            guard let results = apiModel.results.first,
-                  let appID = apiModel.results.first?.appID else
+            guard let results = apiDataModel?.results.first,
+                  let appID = apiDataModel?.results.first?.appID else
             {
                 return .failure(.appStoreAppIDFailure)
             }
             self.appID = appID
             
             // Check the release date of the current version.
-            guard let currentVersionReleaseDate = apiModel.results.first?.currentVersionReleaseDate else
+            guard let currentVersionReleaseDate = apiDataModel?.results.first?.currentVersionReleaseDate else
             {
                 return .failure(.currentVersionReleaseDate)
             }
