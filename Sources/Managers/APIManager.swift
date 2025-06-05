@@ -9,9 +9,11 @@
 import Foundation
 
 /// APIManager for Siren
-public struct APIManager {
+public struct APIManager
+{
     /// Constants used in the `APIManager`.
-    private struct Constants {
+    private struct Constants
+    {
         /// Constant for the `bundleId` parameter in the iTunes Lookup API request.
         static let bundleID = "bundleId"
         /// Constant for the `country` parameter in the iTunes Lookup API request.
@@ -42,7 +44,11 @@ public struct APIManager {
     ///  - country: The country for the App Store in which the app is available.
     ///  - language: The locale to use for the App Store notes. The default result the API returns is equivalent to passing "en_us", so passing `nil` is equivalent to passing "en_us".
     ///  - bundleID: The bundleID for your app. Defaults to `Bundle.main.bundleIdentifier`. Passing `nil` will throw a `missingBundleID` error.
-    public init(country: AppStoreCountry = .unitedStates, language: String? = nil, bundleID: String? = Bundle.main.bundleIdentifier) {
+    public init(
+        country: AppStoreCountry = .unitedStates,
+        language: String? = nil,
+        bundleID: String? = Bundle.main.bundleIdentifier)
+    {
       self.country = country
       self.language = language
       self.bundleID = bundleID
@@ -54,29 +60,36 @@ public struct APIManager {
     public static let `default` = APIManager()
 }
 
-extension APIManager {
+extension APIManager
+{
     /// Convenience initializer that initializes `APIManager` to the region or country of an App Store in which the app is available.
     /// If nil, version check requests are performed against the US App Store.
     ///
     /// - Parameter countryCode: The raw country code for the App Store in which the app is available.
-    public init(countryCode: String?) {
+    public init(countryCode: String?)
+    {
       self.init(country: .init(code: countryCode))
     }
 
     /// Creates and performs a URLRequest against the iTunes Lookup API.
     ///
     /// - returns APIModel: The decoded JSON as an instance of APIModel.
-    func performVersionCheckRequest() async throws -> APIModel {
-        guard bundleID != nil else {
-            throw KnownError.missingBundleID
+    func performVersionCheckRequest() async throws -> Result<APIModel, KnownError>
+    {
+        guard bundleID != nil else
+        {
+            return .failure(.missingBundleID)
         }
 
-        do {
+        do
+        {
             let url = try makeITunesURL()
             let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 30)
             let (data, response) = try await URLSession.shared.data(for: request)
-            return try processVersionCheckResults(withData: data, response: response)
-        } catch {
+            return processVersionCheckResults(withData: data, response: response)
+        }
+        catch
+        {
             throw error
         }
     }
@@ -86,20 +99,28 @@ extension APIManager {
     /// - Parameters:
     ///   - data: The JSON data returned from the request.
     ///   - response: The response metadata returned from the request.
-    private func processVersionCheckResults(withData data: Data?, response: URLResponse?) throws -> APIModel {
-        guard let data = data else {
-            throw KnownError.appStoreDataRetrievalFailure(underlyingError: nil)
+    private func processVersionCheckResults(
+        withData data: Data?,
+        response: URLResponse?) -> Result<APIModel, KnownError>
+    {
+        guard let data = data else
+        {
+            return .failure(.appStoreDataRetrievalFailure(underlyingError: nil))
         }
-        do {
+        do
+        {
             let apiModel = try JSONDecoder().decode(APIModel.self, from: data)
 
-            guard !apiModel.results.isEmpty else {
-                throw KnownError.appStoreDataRetrievalEmptyResults
+            guard !apiModel.results.isEmpty else
+            {
+                return .failure(.appStoreDataRetrievalEmptyResults)
             }
 
-            return apiModel
-        } catch {
-            throw KnownError.appStoreJSONParsingFailure(underlyingError: error)
+            return .success(apiModel)
+        }
+        catch
+        {
+            return .failure(.appStoreJSONParsingFailure(underlyingError: error))
         }
     }
 
@@ -107,7 +128,8 @@ extension APIManager {
     ///
     /// - Returns: The iTunes Lookup API URL.
     /// - Throws: An error if the URL cannot be created.
-    private func makeITunesURL() throws -> URL {
+    private func makeITunesURL() throws -> URL
+    {
         var components = URLComponents()
         components.scheme = "https"
         components.host = "itunes.apple.com"
@@ -120,19 +142,22 @@ extension APIManager {
         items.append(tvOSQueryItem)
         #endif
 
-        if let countryCode = country.code {
+        if let countryCode = country.code
+        {
             let item = URLQueryItem(name: Constants.country, value: countryCode)
             items.append(item)
         }
         
-        if let language = language {
+        if let language = language
+        {
             let item = URLQueryItem(name: Constants.language, value: language)
             items.append(item)
         }
 
         components.queryItems = items
 
-        guard let url = components.url, !url.absoluteString.isEmpty else {
+        guard let url = components.url, !url.absoluteString.isEmpty else
+        {
             throw KnownError.malformedURL
         }
 

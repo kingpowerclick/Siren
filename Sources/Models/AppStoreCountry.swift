@@ -11,12 +11,14 @@ import Foundation
 /// Region or country of an App Store in which an app can be available.
 ///
 /// [List of country codes](https://help.apple.com/app-store-connect/#/dev997f9cf7c)
-public struct AppStoreCountry {
+public struct AppStoreCountry
+{
     /// Raw country code. ex. "US" for United States.
     public let code: String?
 }
 
-extension AppStoreCountry {
+extension AppStoreCountry
+{
   public static let afghanistan: AppStoreCountry = "AFG"
   public static let unitedArabEmirates: AppStoreCountry = "AE"
   public static let antiguaAndBarbuda: AppStoreCountry = "AG"
@@ -200,14 +202,17 @@ extension AppStoreCountry: Equatable { }
 ///   - lhs: First instance of`AppStoreCountry`
 ///   - rhs: Second instance of`AppStoreCountry`
 /// - Returns: `true` if instances are equal. Otherwise, `false`.
-public func == (lhs: AppStoreCountry, rhs: AppStoreCountry) -> Bool {
+public func == (lhs: AppStoreCountry, rhs: AppStoreCountry) -> Bool
+{
     return lhs.code?.uppercased() == rhs.code?.uppercased()
 }
 
-extension AppStoreCountry: ExpressibleByStringLiteral {
+extension AppStoreCountry: ExpressibleByStringLiteral
+{
     /// Allows for `AppStoreCountry` to be initialized by a string literal.
     /// - Parameter value: An instance of `AppStoreCountry` that can be represented as a `String`.
-    public init(stringLiteral value: StringLiteralType) {
+    public init(stringLiteral value: StringLiteralType)
+    {
       self.init(code: value)
     }
 }
