@@ -18,9 +18,11 @@ public protocol VersionCheckingStrategy
 }
 
 
-struct DefaultVersionCheckingStrategy: VersionCheckingStrategy
+public struct DefaultVersionCheckingStrategy: VersionCheckingStrategy
 {
-    func evaluateUpdate(
+    public static var `default`: DefaultVersionCheckingStrategy = .init()
+    
+    public func evaluateUpdate(
         currentInstalledVersion: String,
         currentAppStoreVersion: String?,
         minimumRequiredVersion: String,
@@ -64,9 +66,11 @@ struct DefaultVersionCheckingStrategy: VersionCheckingStrategy
     }
 }
 
-struct AppStoreVersionCheckingStrategy: VersionCheckingStrategy
+public struct AppStoreVersionCheckingStrategy: VersionCheckingStrategy
 {
-    func evaluateUpdate(
+    public static var `default`: AppStoreVersionCheckingStrategy = .init()
+    
+    public func evaluateUpdate(
         currentInstalledVersion: String,
         currentAppStoreVersion: String?,
         minimumRequiredVersion: String,

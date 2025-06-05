@@ -52,7 +52,7 @@ public extension Siren
     func checkVersionUpdate(
         minimumRequiredVersion: String = "0.0.0",
         recommendedVersion: String = "0.0.0",
-        overridedStrategy: VersionCheckingStrategy? = nil,
+        strategy: VersionCheckingStrategy = DefaultVersionCheckingStrategy.default,
         completion handler: ResultsHandler? = nil)
     {
         resultsHandler = handler
@@ -83,31 +83,15 @@ public extension Siren
                         }
                 }
                 
-                if let overridedStrategy = overridedStrategy
-                {
-                    overridedStrategy
-                        .evaluateUpdate(
-                            currentInstalledVersion: currentInstalledVersion,
-                            currentAppStoreVersion: appStoreDataModel?.version,
-                            minimumRequiredVersion: minimumRequiredVersion,
-                            recommendedVersion: recommendedVersion,
-                            storedSkippedVersion: storedSkippedVersion,
-                            appStoreDataModel: appStoreDataModel,
-                            completion: handler)
-                }
-                else
-                {
-                    DefaultVersionCheckingStrategy()
-                        .evaluateUpdate(
-                            currentInstalledVersion: currentInstalledVersion,
-                            currentAppStoreVersion: appStoreDataModel?.version,
-                            minimumRequiredVersion: minimumRequiredVersion,
-                            recommendedVersion: recommendedVersion,
-                            storedSkippedVersion: storedSkippedVersion,
-                            appStoreDataModel: appStoreDataModel,
-                            completion: handler)
-                }
-                
+                strategy
+                    .evaluateUpdate(
+                        currentInstalledVersion: currentInstalledVersion,
+                        currentAppStoreVersion: appStoreDataModel?.version,
+                        minimumRequiredVersion: minimumRequiredVersion,
+                        recommendedVersion: recommendedVersion,
+                        storedSkippedVersion: storedSkippedVersion,
+                        appStoreDataModel: appStoreDataModel,
+                        completion: handler)
             }
         }
     }
