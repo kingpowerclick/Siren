@@ -9,11 +9,13 @@
 import UIKit
 
 // `UIAlertController` Extension for Siren.
-extension UIAlertController {
+extension UIAlertController
+{
     /// Presents Siren's `UIAlertController` in a new `UIWindow`.
     ///
     /// - Parameter window: The `UIWindow` that _should_ reference Siren's `UIAlertController`.
-    func show(window: UIWindow) {
+    func show(window: UIWindow)
+    {
         guard !self.isBeingPresented else { return }
         window.makeKeyAndVisible()
         window.rootViewController?.present(self, animated: true, completion: nil)
@@ -22,7 +24,8 @@ extension UIAlertController {
     /// Hides Siren's `UIAlertController` within a given window.
     ///
     /// - Parameter window: The `UIWindow` that references Siren's `UIAlertController`.
-    func hide(window: UIWindow) {
+    func hide(window: UIWindow)
+    {
         window.isHidden = true
     }
 }
