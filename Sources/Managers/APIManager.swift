@@ -74,11 +74,11 @@ extension APIManager
     /// Creates and performs a URLRequest against the iTunes Lookup API.
     ///
     /// - returns APIModel: The decoded JSON as an instance of APIModel.
-    func performVersionCheckRequest() async throws -> APIModel
+    func performVersionCheckRequest() async throws -> Result<APIModel, KnownError>
     {
         guard bundleID != nil else
         {
-            throw KnownError.missingBundleID
+            return .failure(.missingBundleID)
         }
 
         do
@@ -86,7 +86,7 @@ extension APIManager
             let url = try makeITunesURL()
             let request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 30)
             let (data, response) = try await URLSession.shared.data(for: request)
-            return try processVersionCheckResults(withData: data, response: response)
+            return processVersionCheckResults(withData: data, response: response)
         }
         catch
         {
@@ -101,11 +101,11 @@ extension APIManager
     ///   - response: The response metadata returned from the request.
     private func processVersionCheckResults(
         withData data: Data?,
-        response: URLResponse?) throws -> APIModel
+        response: URLResponse?) -> Result<APIModel, KnownError>
     {
         guard let data = data else
         {
-            throw KnownError.appStoreDataRetrievalFailure(underlyingError: nil)
+            return .failure(.appStoreDataRetrievalFailure(underlyingError: nil))
         }
         do
         {
@@ -113,14 +113,14 @@ extension APIManager
 
             guard !apiModel.results.isEmpty else
             {
-                throw KnownError.appStoreDataRetrievalEmptyResults
+                return .failure(.appStoreDataRetrievalEmptyResults)
             }
 
-            return apiModel
+            return .success(apiModel)
         }
         catch
         {
-            throw KnownError.appStoreJSONParsingFailure(underlyingError: error)
+            return .failure(.appStoreJSONParsingFailure(underlyingError: error))
         }
     }
 

@@ -23,9 +23,9 @@ public enum VersionCheckingType
     /// Forces the user to update if their current app version is below the minimum required version.
     case mandatoryUpdateOnly(minimumRequiredVersion: String)
     /// Suggests an update if the user’s current app version is below the recommended version.
-    case optionalUpdateOnly(recommededVersion: String)
+    case optionalUpdateOnly(recommendedVersion: String)
     /// Presents a forced update if the app is below the minimum required version; otherwise, shows a soft prompt if below the recommended version.
-    case bothMandatoryAndOptional(minimumRequiredVersion: String, recommededVersion: String)
+    case bothMandatoryAndOptional(minimumRequiredVersion: String, recommendedVersion: String)
     /// Check if the App Store version is newer than the currently installed version.
     case newAppStoreUpdateOnly
 }

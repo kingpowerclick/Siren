@@ -1,5 +1,5 @@
 //
-//  DateExtension.swift
+//  Date.swift
 //  Siren
 //
 //  Created by Arthur Sabintsev on 3/21/17.

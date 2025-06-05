@@ -26,8 +26,11 @@ public final class Siren
     /// The current installed version of your app.
     lazy var currentInstalledVersion: String? = Bundle.version()
     
+    /// Holds the parsed App Store metadata from a successful version check.
+    var appStoreDataModel: AppStoreDataModel?
+    
     /// Storing a version that the user wants to skip updating.
-    private var storedSkippedVersion: String? = UserDefaults.storedSkippedVersion
+    private var userPreviouslySkippedVersion: String? = UserDefaults.userPreviouslySkippedVersion
     
     /// The App Store's unique identifier for an app.
     private var appID: Int?
@@ -47,37 +50,49 @@ public extension Siren
     ///   - versionCheckingStrategy:  A value that determines the update rules (e.g., mandatory, optional, both, or new version only). Defaults to `.newAppStoreUpdateOnly`.
     ///   - handler: Returns the metadata around a successful version check and interaction with the update modal or it returns nil.
     func checkVersionUpdate(
-        _ versionCheckingType: VersionCheckingType = .newAppStoreUpdateOnly,
-        isByPassAppStoreVersionCheck: Bool = true,
+        mandatoryUpdateVersion: String = "0.0.0",
+        minimumSuggestedVersion: String = "0.0.0",
+        strategy: VersionCheckingStrategy = DefaultVersionCheckingStrategy.default,
         completion handler: ResultsHandler? = nil)
     {
         resultsHandler = handler
         
-        storedSkippedVersion = UserDefaults.storedSkippedVersion
+        userPreviouslySkippedVersion = UserDefaults.userPreviouslySkippedVersion
+        
+        guard let currentInstalledVersion = currentInstalledVersion else
+        {
+            return
+        }
         
         Task
         {
             let result = await fetchAppStoreVersionData()
             
             await MainActor.run {
-                if isByPassAppStoreVersionCheck
+                var appStoreDataModel: AppStoreDataModel?
+                switch result
                 {
-                    validate(versionCheckingType: versionCheckingType)
-                }
-                else
-                {
-                    switch result
-                    {
-                        case let .success(appStoreDataModel):
-                            validate(
-                                versionCheckingType: versionCheckingType,
-                                appStoreDataModel: appStoreDataModel)
-                            
-                        case let .failure(error):
+                    case let .success(dataModel):
+                        appStoreDataModel = dataModel
+                        
+                    case let .failure(error):
+                        guard case .appStoreDataRetrievalEmptyResults = error else
+                        {
                             resultsHandler?(.failure(error))
-                            
-                    }
-                } }
+                            return
+                        }
+                }
+                
+                strategy
+                    .evaluateUpdate(
+                        currentInstalledVersion: currentInstalledVersion,
+                        currentAppStoreVersion: appStoreDataModel?.version,
+                        mandatoryUpdateVersion: mandatoryUpdateVersion,
+                        minimumSuggestedVersion: minimumSuggestedVersion,
+                        userPreviouslySkippedVersion: userPreviouslySkippedVersion,
+                        appStoreDataModel: appStoreDataModel,
+                        completion: handler)
+            }
         }
     }
     
@@ -85,19 +100,18 @@ public extension Siren
     ///
     /// This function is marked `public` as a convenience for those developers who decide to build a custom alert modal
     /// instead of using Siren's prebuilt update alert.
-    func launchAppStore() async
+    @MainActor
+    func launchAppStore()
     {
         guard let appID = appID,
               let url = URL(string: "https://itunes.apple.com/app/id\(appID)") else
         {
-            await MainActor.run {
-                resultsHandler?(.failure(.malformedURL)) }
+            resultsHandler?(.failure(.malformedURL))
             
             return
         }
         
-        await MainActor.run {
-            UIApplication.shared.open(url, options: [:], completionHandler: nil) }
+        UIApplication.shared.open(url, options: [:], completionHandler: nil)
     }
     
     /// Begins the version checking and update evaluation process.
@@ -105,7 +119,7 @@ public extension Siren
     /// This method retrieves the previously skipped version (if any) from `UserDefaults`,
     func markAsSkippedVersion(softVersionToSkip: String)
     {
-        UserDefaults.storedSkippedVersion = softVersionToSkip
+        UserDefaults.userPreviouslySkippedVersion = softVersionToSkip
     }
 }
 
@@ -118,24 +132,36 @@ private extension Siren
     {
         do
         {
-            let apiModel = try await apiManager.performVersionCheckRequest()
+            let result = try await apiManager.performVersionCheckRequest()
+            
+            let apiDataModel: APIModel?
+            
+            switch result
+            {
+                case let .success(apiModel):
+                    apiDataModel = apiModel
+                case let .failure(error):
+                    apiDataModel = nil
+                    return .failure(error)
+            }
+            
             
             // Check if the latest version is compatible with current device's version of iOS.
-            guard DataParser.isUpdateCompatibleWithDeviceOS(for: apiModel) else
+            guard DataParser.isUpdateCompatibleWithDeviceOS(for: apiDataModel) else
             {
                 return .failure(.appStoreOSVersionUnsupported)
             }
             
             // Check and store the App ID .
-            guard let results = apiModel.results.first,
-                  let appID = apiModel.results.first?.appID else
+            guard let results = apiDataModel?.results.first,
+                  let appID = apiDataModel?.results.first?.appID else
             {
                 return .failure(.appStoreAppIDFailure)
             }
             self.appID = appID
             
             // Check the release date of the current version.
-            guard let currentVersionReleaseDate = apiModel.results.first?.currentVersionReleaseDate else
+            guard let currentVersionReleaseDate = apiDataModel?.results.first?.currentVersionReleaseDate else
             {
                 return .failure(.currentVersionReleaseDate)
             }
@@ -153,154 +179,4 @@ private extension Siren
             return .failure(.performVersionCheckingFailed(underlyingError: error))
         }
     }
-    
-    /// Validates the parsed and mapped iTunes Lookup Model
-    /// to guarantee all the relevant data was returned before
-    /// attempting to present an alert.
-    ///
-    /// - Parameter apiModel: The iTunes Lookup Model.
-    func validate(
-        versionCheckingType: VersionCheckingType,
-        appStoreDataModel: AppStoreDataModel? = nil)
-    {
-        switch versionCheckingType
-        {
-            case let .mandatoryUpdateOnly(minimumRequiredVersion):
-                if DataParser.isVersionOlder(appStoreDataModel?.version, than: minimumRequiredVersion)
-                {
-                    resultsHandler?(
-                        .success(
-                            UpdateResults(
-                                alertType: .maintenance,
-                                model: appStoreDataModel)))
-                }
-                else if DataParser.isVersionOlder(currentInstalledVersion, than: minimumRequiredVersion)
-                {
-                    resultsHandler?(
-                        .success(
-                            UpdateResults(
-                                alertType: .force,
-                                model: appStoreDataModel)))
-                }
-                else
-                {
-                    resultsHandler?(.failure(.noUpdateAvailable))
-                }
-                
-            case let .optionalUpdateOnly(recommendedVersion):
-                if DataParser.isVersionOlder(currentInstalledVersion, than: recommendedVersion)
-                    && DataParser.isVersionOlder(currentInstalledVersion, than: appStoreDataModel?.version)
-                {
-                    guard let storedSkippedVersion = storedSkippedVersion else
-                    {
-                        resultsHandler?(
-                            .success(
-                                UpdateResults(
-                                    alertType: .soft,
-                                    model: appStoreDataModel)))
-                        
-                        return
-                    }
-                    
-                    if storedSkippedVersion != recommendedVersion
-                    {
-                        UserDefaults.alertPresentationDate = Date()
-                        
-                        resultsHandler?(
-                            .success(
-                                UpdateResults(
-                                    alertType: .soft,
-                                    model: appStoreDataModel)))
-                    }
-                    else
-                    {
-                        resultsHandler?(.failure(.recentlyPrompted))
-                    }
-                }
-                else
-                {
-                    resultsHandler?(.failure(.noUpdateAvailable))
-                }
-                
-            case let .bothMandatoryAndOptional(minimumRequiredVersion, recommendedVersion):
-                if DataParser.isVersionOlder(currentInstalledVersion, than: minimumRequiredVersion)
-                {
-                    resultsHandler?(
-                        .success(
-                            UpdateResults(
-                                alertType: .force,
-                                model: appStoreDataModel)))
-                }
-                else if DataParser.isVersionOlder(currentInstalledVersion, than: recommendedVersion)
-                {
-                    if storedSkippedVersion == nil
-                        || storedSkippedVersion != recommendedVersion
-                    {
-                        resultsHandler?(
-                            .success(
-                                UpdateResults(
-                                    alertType: .soft,
-                                    model: appStoreDataModel)))
-                    }
-                    else
-                    {
-                        resultsHandler?(.failure(.noUpdateAvailable))
-                    }
-                }
-                else
-                {
-                    resultsHandler?(.failure(.noUpdateAvailable))
-                }
-                
-            case .newAppStoreUpdateOnly:
-                if DataParser.isVersionOlder(currentInstalledVersion, than: appStoreDataModel?.version)
-                {
-                    resultsHandler?(.success(
-                        UpdateResults(
-                            alertType: .soft,
-                            model: appStoreDataModel)))
-                }
-                else
-                {
-                    resultsHandler?(.failure(.noUpdateAvailable))
-                }
-        }
-    }
-    
-    // MARK: - For Further implimentation with checking AppStore version
-    
-    private func crossCheckAppStoreStrategy(
-        currentAppStoreVersion: String,
-        minimumRequiredVersion: String,
-        recommendedVersion: String)
-    {
-
-        if DataParser.isVersionOlder(currentInstalledVersion, than: minimumRequiredVersion)
-        {
-            if DataParser.isVersionOlder(currentAppStoreVersion, than: minimumRequiredVersion)
-            {
-                // maintenance
-            }
-            else
-            {
-                // forceUpdate
-            }
-        }
-        else if DataParser.isVersionOlder(currentInstalledVersion, than: recommendedVersion)
-                    && DataParser.isVersionOlder(currentInstalledVersion, than: currentAppStoreVersion)
-        {
-            guard let storedSkippedVersion = storedSkippedVersion,
-                storedSkippedVersion != recommendedVersion else
-            {
-                return
-            }
-            
-            // softUpdate
-        }
-        else
-        {
-            // do-nothing
-        }
-    }
-    
 }

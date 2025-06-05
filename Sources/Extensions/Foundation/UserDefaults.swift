@@ -1,5 +1,5 @@
 //
-//  UserDefaultsExtension.swift
+//  UserDefaults.swift
 //  Siren
 //
 //  Created by Arthur Sabintsev on 9/25/18.
@@ -22,13 +22,13 @@ extension UserDefaults
         case StoredVersionCheckDate
 
         /// Key that stores the version that a user decided to skip.
-        case StoredSkippedVersion
+        case userPreviouslySkippedVersion
     }
 
     /// Sets and Gets a `UserDefault` around storing a version that the user wants to skip updating.
-    static var storedSkippedVersion: String? {
-        get { return standard.string(forKey: SirenKeys.StoredSkippedVersion.rawValue) }
-        set { standard.set(newValue, forKey: SirenKeys.StoredSkippedVersion.rawValue) } }
+    static var userPreviouslySkippedVersion: String? {
+        get { return standard.string(forKey: SirenKeys.userPreviouslySkippedVersion.rawValue) }
+        set { standard.set(newValue, forKey: SirenKeys.userPreviouslySkippedVersion.rawValue) } }
 
     /// Sets and Gets a `UserDefault` around the last time the user was presented a version update alert.
     static var alertPresentationDate: Date? {
