@@ -11,7 +11,7 @@ public extension String
 {
     func isVersionOlder(than comparingVersion: String) -> Bool
     {
-        return self.compare(comparingVersion, options: .numeric) == .orderedAscending
+        return compare(comparingVersion, options: .numeric) == .orderedAscending
     }
 }
 

@@ -11,8 +11,8 @@ public protocol VersionCheckingStrategy
         currentInstalledVersion: String,
         currentAppStoreVersion: String?,
         minimumRequiredVersion: String,
-        recommendedVersion: String,
-        storedSkippedVersion: String?,
+        minimumSuggestedVersion: String,
+        userPreviouslySkippedVersion: String?,
         appStoreDataModel: AppStoreDataModel?,
         completion handler: ((Result<UpdateResults, KnownError>) -> Void)?)
 }
@@ -26,8 +26,8 @@ public struct DefaultVersionCheckingStrategy: VersionCheckingStrategy
         currentInstalledVersion: String,
         currentAppStoreVersion: String?,
         minimumRequiredVersion: String,
-        recommendedVersion: String,
-        storedSkippedVersion: String?,
+        minimumSuggestedVersion: String,
+        userPreviouslySkippedVersion: String?,
         appStoreDataModel: AppStoreDataModel?,
         completion handler: ((Result<UpdateResults, KnownError>) -> Void)? = nil)
     {
@@ -40,10 +40,10 @@ public struct DefaultVersionCheckingStrategy: VersionCheckingStrategy
                         alertType: .force,
                         model: appStoreDataModel)))
         }
-        else if currentInstalledVersion.isVersionOlder(than: recommendedVersion)
+        else if currentInstalledVersion.isVersionOlder(than: minimumSuggestedVersion)
         {
-            if storedSkippedVersion == nil
-                || storedSkippedVersion != recommendedVersion
+            if userPreviouslySkippedVersion == nil
+                || userPreviouslySkippedVersion != minimumSuggestedVersion
             {
                 // softUpdate
                 handler?(
@@ -74,8 +74,8 @@ public struct AppStoreVersionCheckingStrategy: VersionCheckingStrategy
         currentInstalledVersion: String,
         currentAppStoreVersion: String?,
         minimumRequiredVersion: String,
-        recommendedVersion: String,
-        storedSkippedVersion: String?,
+        minimumSuggestedVersion: String,
+        userPreviouslySkippedVersion: String?,
         appStoreDataModel: AppStoreDataModel?,
         completion handler: ((Result<UpdateResults, KnownError>) -> Void)? = nil)
     {
@@ -105,11 +105,11 @@ public struct AppStoreVersionCheckingStrategy: VersionCheckingStrategy
                             model: appStoreDataModel)))
             }
         }
-        else if currentInstalledVersion.isVersionOlder(than: recommendedVersion)
+        else if currentInstalledVersion.isVersionOlder(than: minimumSuggestedVersion)
                     && currentInstalledVersion.isVersionOlder(than: currentAppStoreVersion)
         {
-            if storedSkippedVersion == nil
-                || storedSkippedVersion != recommendedVersion
+            if userPreviouslySkippedVersion == nil
+                || userPreviouslySkippedVersion != minimumSuggestedVersion
             {
                 // softUpdate
                 handler?(

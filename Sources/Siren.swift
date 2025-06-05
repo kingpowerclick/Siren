@@ -30,7 +30,7 @@ public final class Siren
     var appStoreDataModel: AppStoreDataModel?
     
     /// Storing a version that the user wants to skip updating.
-    private var storedSkippedVersion: String? = UserDefaults.storedSkippedVersion
+    private var userPreviouslySkippedVersion: String? = UserDefaults.userPreviouslySkippedVersion
     
     /// The App Store's unique identifier for an app.
     private var appID: Int?
@@ -51,13 +51,13 @@ public extension Siren
     ///   - handler: Returns the metadata around a successful version check and interaction with the update modal or it returns nil.
     func checkVersionUpdate(
         minimumRequiredVersion: String = "0.0.0",
-        recommendedVersion: String = "0.0.0",
+        minimumSuggestedVersion: String = "0.0.0",
         strategy: VersionCheckingStrategy = DefaultVersionCheckingStrategy.default,
         completion handler: ResultsHandler? = nil)
     {
         resultsHandler = handler
         
-        storedSkippedVersion = UserDefaults.storedSkippedVersion
+        userPreviouslySkippedVersion = UserDefaults.userPreviouslySkippedVersion
         
         guard let currentInstalledVersion = currentInstalledVersion else
         {
@@ -88,8 +88,8 @@ public extension Siren
                         currentInstalledVersion: currentInstalledVersion,
                         currentAppStoreVersion: appStoreDataModel?.version,
                         minimumRequiredVersion: minimumRequiredVersion,
-                        recommendedVersion: recommendedVersion,
-                        storedSkippedVersion: storedSkippedVersion,
+                        minimumSuggestedVersion: minimumSuggestedVersion,
+                        userPreviouslySkippedVersion: userPreviouslySkippedVersion,
                         appStoreDataModel: appStoreDataModel,
                         completion: handler)
             }
@@ -100,19 +100,18 @@ public extension Siren
     ///
     /// This function is marked `public` as a convenience for those developers who decide to build a custom alert modal
     /// instead of using Siren's prebuilt update alert.
-    func launchAppStore() async
+    @MainActor
+    func launchAppStore()
     {
         guard let appID = appID,
               let url = URL(string: "https://itunes.apple.com/app/id\(appID)") else
         {
-            await MainActor.run {
-                resultsHandler?(.failure(.malformedURL)) }
+            resultsHandler?(.failure(.malformedURL))
             
             return
         }
         
-        await MainActor.run {
-            UIApplication.shared.open(url, options: [:], completionHandler: nil) }
+        UIApplication.shared.open(url, options: [:], completionHandler: nil)
     }
     
     /// Begins the version checking and update evaluation process.
@@ -120,7 +119,7 @@ public extension Siren
     /// This method retrieves the previously skipped version (if any) from `UserDefaults`,
     func markAsSkippedVersion(softVersionToSkip: String)
     {
-        UserDefaults.storedSkippedVersion = softVersionToSkip
+        UserDefaults.userPreviouslySkippedVersion = softVersionToSkip
     }
 }
 
