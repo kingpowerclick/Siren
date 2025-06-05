@@ -50,7 +50,7 @@ public extension Siren
     ///   - versionCheckingStrategy:  A value that determines the update rules (e.g., mandatory, optional, both, or new version only). Defaults to `.newAppStoreUpdateOnly`.
     ///   - handler: Returns the metadata around a successful version check and interaction with the update modal or it returns nil.
     func checkVersionUpdate(
-        minimumRequiredVersion: String = "0.0.0",
+        mandatoryUpdateVersion: String = "0.0.0",
         minimumSuggestedVersion: String = "0.0.0",
         strategy: VersionCheckingStrategy = DefaultVersionCheckingStrategy.default,
         completion handler: ResultsHandler? = nil)
@@ -87,7 +87,7 @@ public extension Siren
                     .evaluateUpdate(
                         currentInstalledVersion: currentInstalledVersion,
                         currentAppStoreVersion: appStoreDataModel?.version,
-                        minimumRequiredVersion: minimumRequiredVersion,
+                        mandatoryUpdateVersion: mandatoryUpdateVersion,
                         minimumSuggestedVersion: minimumSuggestedVersion,
                         userPreviouslySkippedVersion: userPreviouslySkippedVersion,
                         appStoreDataModel: appStoreDataModel,

@@ -10,7 +10,7 @@ public protocol VersionCheckingStrategy
     func evaluateUpdate(
         currentInstalledVersion: String,
         currentAppStoreVersion: String?,
-        minimumRequiredVersion: String,
+        mandatoryUpdateVersion: String,
         minimumSuggestedVersion: String,
         userPreviouslySkippedVersion: String?,
         appStoreDataModel: AppStoreDataModel?,
@@ -25,13 +25,13 @@ public struct DefaultVersionCheckingStrategy: VersionCheckingStrategy
     public func evaluateUpdate(
         currentInstalledVersion: String,
         currentAppStoreVersion: String?,
-        minimumRequiredVersion: String,
+        mandatoryUpdateVersion: String,
         minimumSuggestedVersion: String,
         userPreviouslySkippedVersion: String?,
         appStoreDataModel: AppStoreDataModel?,
         completion handler: ((Result<UpdateResults, KnownError>) -> Void)? = nil)
     {
-        if currentInstalledVersion.isVersionOlder(than: minimumRequiredVersion)
+        if currentInstalledVersion.isVersionOlder(than: mandatoryUpdateVersion)
         {
             // forceUpdate
             handler?(
@@ -73,7 +73,7 @@ public struct AppStoreVersionCheckingStrategy: VersionCheckingStrategy
     public func evaluateUpdate(
         currentInstalledVersion: String,
         currentAppStoreVersion: String?,
-        minimumRequiredVersion: String,
+        mandatoryUpdateVersion: String,
         minimumSuggestedVersion: String,
         userPreviouslySkippedVersion: String?,
         appStoreDataModel: AppStoreDataModel?,
@@ -84,9 +84,9 @@ public struct AppStoreVersionCheckingStrategy: VersionCheckingStrategy
             return
         }
         
-        if currentInstalledVersion.isVersionOlder(than: minimumRequiredVersion)
+        if currentInstalledVersion.isVersionOlder(than: mandatoryUpdateVersion)
         {
-            if currentAppStoreVersion.isVersionOlder(than: minimumRequiredVersion)
+            if currentAppStoreVersion.isVersionOlder(than: mandatoryUpdateVersion)
             {
                 // maintenance
                 handler?(
